@@ -191,6 +191,13 @@ you teach from `PITFALLS.md`, say where it came from. That is the whole ask.
 Credit looks like: *"Based on Systems Integration Lab by Michael Young,
 https://github.com/young9898/systems-integration-lab, CC BY 4.0."*
 
+**And to be clear about the spirit of it:** I am not going to chase anyone. There
+is no lawyer and there is no plan to involve one. Attribution is a courtesy I would
+appreciate, not a tripwire. If you teach this and forget to credit me, use it
+anyway — the work exists to save somebody an evening, and it does that whether or
+not my name goes along for the ride. If you build something better on top of it,
+that is the best outcome on the table.
+
 ## Dependencies
 All dependencies are open source.
 - [DEPENDENCIES.md](DEPENDENCIES.md) — human-readable summary
