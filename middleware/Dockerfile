@@ -12,6 +12,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py entrypoint.sh ./
+# Tests live under middleware/ deliberately: the build context is ./middleware,
+# so a tests/ directory at the repo root could not be COPYed here at all. They
+# ship with the image so they can run against the exact dependency versions the
+# container has:
+#   docker compose exec middleware python -m unittest discover -s tests
+COPY tests ./tests
 RUN chmod +x entrypoint.sh
 
 CMD ["./entrypoint.sh"]

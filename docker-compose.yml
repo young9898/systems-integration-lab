@@ -9,6 +9,9 @@ services:
   middleware:
     build: ./middleware
     ports:
+      # frontend/index.html hardcodes http://localhost:5001 — change BOTH together.
+      # 5001 rather than 5000 because macOS reserves 5000 for AirPlay Receiver;
+      # on Linux/Windows 5000 is free, but "fixing" it here alone breaks the UI.
       - "5001:5000"
     environment:
       DB_HOST: db

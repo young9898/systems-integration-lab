@@ -198,6 +198,35 @@ docker compose logs middleware --tail 20    # ollama logs the load events
 
 ---
 
+## 10. The chat says "no valid JSON response" — you skipped the model pull
+
+**Symptom**: the stack builds and starts, `curl localhost:5001/api/health` and
+`/api/inventory` both return clean JSON, the page loads at `localhost:8080` — but
+every chat message fails.
+
+**Cause**: `docker compose up` does not download the model. That is a separate,
+one-time command, and nothing about a healthy-looking stack tells you it is
+missing. The model lives in the `ollama_data` volume, so it also disappears if you
+ever run `docker compose down -v`.
+
+**Fix**:
+```bash
+docker compose exec middleware ollama pull llama3.2:3b
+docker compose exec middleware ollama list      # confirm it is there
+```
+
+**Why this trap is worse than it looks**: before the error handling was added,
+`ollama.chat` failing produced an unhandled exception, Flask returned an HTML
+error page, and the browser's `res.json()` threw on the HTML. The UI then reported
+"could not reach middleware" — a *false* diagnosis. The middleware had been
+reached and had answered; only the model was missing. Readers lost time debugging
+ports, CORS, and compose networking that were all fine.
+
+The general lesson is worth more than the fix: **an error message that names the
+wrong layer is more expensive than no error message at all.** When a diagnosis
+points somewhere, verify the pointer before you trust it — check
+`docker compose logs middleware --tail 30` and see what the server actually said.
+
 ## Quick troubleshooting commands
 
 ```sh

@@ -102,7 +102,13 @@
                 const data = await res.json();
                 thinking.textContent = data.answer || data.error || '(no response)';
             } catch (e) {
-                thinking.textContent = 'Error: could not reach middleware.';
+                // Reaching here means the fetch failed OR the response was not JSON.
+                // Do not claim the middleware was unreachable — it may have answered
+                // with an HTML error page, and a false diagnosis sends you off
+                // debugging ports and CORS that are fine. Check the logs instead.
+                thinking.textContent =
+                    'Error: no valid JSON response from the middleware. ' +
+                    'Check: docker compose logs middleware --tail 30';
             } finally {
                 sendBtn.disabled = false;
             }

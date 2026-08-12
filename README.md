@@ -1,7 +1,20 @@
 # Systems Integration Lab Environment
 
-## Overview
-This repository contains the lab environment for a graduate-level Systems Integration course. Students build a three-tier enterprise architecture using containers, culminating in a fully integrated system with an AI component.
+## What this is
+
+**This is the completed reference implementation of the lab stack, not the student assignment.** Everything here runs; the "Current State" sections below are all marked done because they are done.
+
+A graduate-level Systems Integration teaching stack: a three-tier enterprise architecture in containers, with a small local LLM added as a capability of the middleware tier. The architecture is the lesson. The AI rides on it.
+
+**The step-by-step lab worksheets do not exist.** You will see references to a numbered build sequence ("legacy from Step 4", "post-Step 7a"); those are the order the stack was built in, not documents you are missing. Nothing is being withheld — the worksheets were never written. What you get is a working stack, the reasoning behind each decision, and an unusually honest troubleshooting record. Wrapping that in learning objectives and deliverables is the part left to you.
+
+**Four choices are load-bearing.** They look like things to modernize; they are the lesson:
+1. **Three containers, not four** — the LLM lives inside the middleware tier because it is a capability, not a tier.
+2. **`python:3.12-slim`, not alpine** — the Ollama binary is glibc-linked and will not run on musl.
+3. **No host installs** — every process runs in the compose stack; the only host requirements are Docker and git.
+4. **Ollama on loopback only** — the model is reachable by Flask, not from outside the container.
+
+`PITFALLS.md` argues each of these from the failure that produced it.
 
 ## Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
@@ -16,8 +29,13 @@ git clone <repo-url>
 cd Systems_Integration_Course
 cp .env.example .env          # then edit .env and set DB_PASSWORD
 docker compose up --build -d
+docker compose exec middleware ollama pull llama3.2:3b   # one-time, ~2 GB
 ```
 Open `http://localhost:8080` in your browser to see the frontend.
+
+**Do not skip the `ollama pull`.** The stack builds, starts, and answers
+`/api/health` and `/api/inventory` without it — only the chat fails, and it fails
+at the point where you have already been told everything is running.
 
 The database password lives in `.env`, which is gitignored — no credential is
 committed to this repository. Compose refuses to start with a clear error if
@@ -97,7 +115,7 @@ docker compose logs <service> --tail 30   # Recent logs from one service
 # Health checks
 curl http://localhost:8080                    # Frontend
 curl http://localhost:5001/api/health         # Middleware
-curl http://localhost:5001/api/inventory      # Full integration (FE→MW→DB)
+curl http://localhost:5001/api/inventory      # Middleware→DB only (NOT the frontend hop)
 docker compose exec middleware ollama list    # Model status
 
 # Resource accounting
@@ -117,6 +135,14 @@ docker image prune -f         # Reclaim dangling images
 | Middleware  | 5001      | 5000           | Port 5000 reserved by macOS AirPlay |
 | Database    | (none)    | 5432           | Internal to compose network only |
 | Ollama      | (none)    | 11434          | Inside middleware container, loopback only |
+
+## Tests
+```bash
+docker compose exec middleware python -m unittest discover -s tests
+```
+Fully mocked — no database, no LLM, no network. They live under `middleware/`
+because that is the compose build context; a root-level `tests/` could not be
+copied into the image.
 
 ## When something breaks
 Start with [PITFALLS.md](PITFALLS.md) — it covers every issue we expect students to hit (and why), with diagnosis and fix.
