@@ -172,7 +172,24 @@ copied into the image.
 Start with [PITFALLS.md](PITFALLS.md) — it covers every issue we expect students to hit (and why), with diagnosis and fix.
 
 ## License
-MIT — see [LICENSE](LICENSE)
+
+This repository is dual-licensed, because it is two different kinds of thing.
+
+**Code** — `docker-compose.yml`, everything under `frontend/`, `middleware/`, and
+`db/`, and the `.env.example` — is under the **MIT License** ([LICENSE](LICENSE)).
+Take it, change it, ship it, sell it. Keep the copyright notice.
+
+**Documentation** — `README.md`, `PITFALLS.md`, `DEPENDENCIES.md`, and `SBOM.md` —
+is under **CC BY 4.0** ([LICENSE-DOCS](LICENSE-DOCS)). Same freedom, including
+commercial use, with one condition: **give credit.**
+
+Why the split: the code here is ordinary and worth little on its own — a hundred
+repositories have a three-tier compose stack. The value is in the written record of
+what went wrong and why, which took real hours to learn and is trivial to copy. If
+you teach from `PITFALLS.md`, say where it came from. That is the whole ask.
+
+Credit looks like: *"Based on Systems Integration Lab by Michael Young,
+https://github.com/young9898/systems-integration-lab, CC BY 4.0."*
 
 ## Dependencies
 All dependencies are open source.
