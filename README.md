@@ -17,11 +17,35 @@ A graduate-level Systems Integration teaching stack: a three-tier enterprise arc
 `PITFALLS.md` argues each of these from the failure that produced it.
 
 ## Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+- A container runtime: [Docker Desktop](https://www.docker.com/products/docker-desktop/), [Colima](https://github.com/abiosoft/colima), OrbStack, or Docker Engine on Linux
 - [Git](https://git-scm.com/)
 - A text editor
 
 **Nothing else is installed on your host machine.** Every process in this lab runs inside a container. See [PITFALLS.md](PITFALLS.md) for why this matters.
+
+### What your machine actually needs
+
+This is the part that costs people an evening, so it is stated up front rather than discovered.
+
+| Resource | Needed | Why |
+|---|---|---|
+| Container VM RAM | **8 GB recommended**, 4 GB likely floor | The 3B model must fit in RAM *inside the VM*, alongside Postgres |
+| Disk | **~10 GB free** | ~2 GB model, ~1 GB images, plus build cache |
+| CPU | 4+ cores recommended | Inference is CPU-only here; fewer cores means slower answers, not failure |
+| Architecture | arm64 or x86_64 | Verified on Apple Silicon (arm64) |
+
+**On macOS or Windows your containers run inside a Linux VM, and that VM's memory limit is the one that matters — not your machine's.** A laptop with 32 GB of RAM will still fail if the VM was given 2 GB. Docker Desktop defaults are usually adequate; Colima's default is not.
+
+```bash
+# Colima: the default 2 CPU / 2 GB VM is too small for a 3B model.
+colima start --cpu 6 --memory 12 --disk 60
+
+# Docker Desktop: Settings → Resources → Memory, 8 GB or more
+```
+
+If the model is starved of memory the symptom is not a clear error — it is a request that hangs, or a container that disappears. See [PITFALLS.md §13](PITFALLS.md).
+
+Verified working configuration: Colima 6 CPU / 12 GB / 60 GB on an Apple Silicon Mac, Docker Engine 29.5.2, Compose 5.2.0.
 
 ## Getting Started
 ```bash

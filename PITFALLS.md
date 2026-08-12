@@ -294,6 +294,43 @@ BuildKit, `COPY --chmod=644` does the same in one step.)
 not configuration. Read the error log before touching the config — `docker compose
 logs frontend --tail 20` names the exact file and the exact reason.
 
+## 13. Your machine has plenty of RAM; the VM your containers run in does not
+
+**Symptom**: everything builds and starts. `/api/health` and `/api/inventory`
+answer fine. Then the first chat request hangs for minutes, or the middleware
+container vanishes and restarts, or answers arrive absurdly slowly. Your laptop
+has 16 or 32 GB free, so memory "cannot" be the problem.
+
+**Cause**: on macOS and Windows, containers do not run on your machine. They run
+inside a Linux VM, and **that VM's memory allocation is the ceiling** — not your
+host's. The 3B model needs roughly 2.5–3 GB resident, and it shares the VM with
+Postgres and the Python runtime. In an undersized VM the model either cannot load
+or forces constant swapping, and neither produces a clear error message.
+
+Colima defaults to **2 CPU / 2 GB**, which is well under what this stack needs.
+Docker Desktop's defaults are usually adequate but are worth checking.
+
+**Fix**:
+```bash
+# Colima — the VM size is set at start time, so stop and restart it
+colima stop
+colima start --cpu 6 --memory 12 --disk 60
+
+# Docker Desktop — Settings → Resources → Memory → 8 GB or more, then Apply & Restart
+```
+
+**Confirm what the VM actually got** (this reports the VM's view, not your Mac's):
+```bash
+docker info --format 'cpus={{.NCPU}} mem={{.MemTotal}}'
+```
+A `mem` value around 2000000000 (2 GB) is the tell.
+
+**Why this one is worth a section**: it is invisible to every other kind of
+checking. The Dockerfile is right, the compose file is right, the code is right,
+the tests pass — and it still does not work, because the constraint lives one
+layer below everything you have been reading. Reach for `docker info` early when
+symptoms are "slow or hangs" rather than "errors".
+
 ## Quick troubleshooting commands
 
 ```sh
