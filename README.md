@@ -171,6 +171,11 @@ copied into the image.
 ## When something breaks
 Start with [PITFALLS.md](PITFALLS.md) — it covers every issue we expect students to hit (and why), with diagnosis and fix.
 
+## Contact
+
+Issues and pull requests are welcome. For anything that does not belong in a
+public issue: **github@youngnetwork.org**
+
 ## License
 
 This repository is dual-licensed, because it is two different kinds of thing.
