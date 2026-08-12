@@ -227,6 +227,73 @@ wrong layer is more expensive than no error message at all.** When a diagnosis
 points somewhere, verify the pointer before you trust it — check
 `docker compose logs middleware --tail 30` and see what the server actually said.
 
+## 11. `curl … | sh` builds a broken image and reports success
+
+**Symptom**: `docker compose build` completes cleanly. The stack starts. Then the
+middleware log loops forever on:
+```
+./entrypoint.sh: 4: ollama: not found
+Waiting for Ollama to be ready...
+```
+Flask never starts, so `/api/health` returns nothing and every request times out.
+
+**Cause**: the Dockerfile installed Ollama with `curl -fsSL … | sh`. The download
+returned HTTP 503. Curl failed — but **a pipeline's exit status is the last
+command's**, and `sh` handed an empty stdin does nothing and exits 0. The `&&`
+chain saw success, the layer was committed, and Docker tagged an image with no
+`ollama` binary in it.
+
+The build log contains the evidence, one line among hundreds:
+```
+curl: (22) The requested URL returned error: 503
+```
+Nothing else flags it, and the failure only appears later, in a different
+container, as a symptom that looks nothing like a download problem.
+
+**Fix** — download first, run second, and demand a receipt:
+```dockerfile
+RUN curl -fsSL https://ollama.com/install.sh -o /tmp/ollama-install.sh \
+ && sh /tmp/ollama-install.sh \
+ && rm -f /tmp/ollama-install.sh \
+ && command -v ollama        # fails the build if no binary landed
+```
+`command -v ollama` is the important line. Installing something is not evidence it
+installed; checking that the artifact exists is.
+
+**The general lesson**: any `A | B` in a Dockerfile hides A's failure. If you must
+pipe, use `SHELL ["/bin/bash", "-o", "pipefail", "-c"]`. And verify the artifact
+you were trying to produce actually exists before the layer is committed — a
+transient network blip during a build should break the build, not ship.
+
+## 12. Apache returns 403 for a file that is plainly there
+
+**Symptom**: `curl localhost:8080` returns 403. The file is in the image; `ls`
+inside the container shows it. The Apache error log says:
+```
+(13)Permission denied: AH00132: file permissions deny server access:
+/usr/local/apache2/htdocs/index.html
+```
+
+**Cause**: `COPY` preserves the **host** file's permission bits. If your checkout
+has restrictive modes — files under iCloud Drive are created `0600`, and some
+umask settings do the same — the file arrives in the image readable only by root.
+Apache runs as `www-data` and cannot open it. Nothing about the Dockerfile,
+Compose, or Apache config is wrong; the build simply inherited the permissions of
+whichever machine ran it, which is why it can work for one person and fail for the
+next from identical source.
+
+**Fix**:
+```dockerfile
+COPY index.html /usr/local/apache2/htdocs/index.html
+RUN chmod 644 /usr/local/apache2/htdocs/index.html
+```
+Normalise permissions in the image rather than depending on the host's. (With
+BuildKit, `COPY --chmod=644` does the same in one step.)
+
+**Diagnostic worth internalising**: 403 with the file present means *permissions*,
+not configuration. Read the error log before touching the config — `docker compose
+logs frontend --tail 20` names the exact file and the exact reason.
+
 ## Quick troubleshooting commands
 
 ```sh
