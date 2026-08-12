@@ -1,0 +1,4 @@
+flask==3.1.*
+flask-cors==5.*
+psycopg[binary]==3.2.*
+ollama==0.4.*

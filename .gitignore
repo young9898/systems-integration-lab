@@ -1,0 +1,30 @@
+# Instructor-only
+CLAUDE.md
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+*.env.local
+
+# Docker
+docker-compose.override.yml
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Node
+node_modules/
+
+# LLM models (large binary files)
+*.gguf
+*.bin
+models/

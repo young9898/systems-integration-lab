@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { text-align: center; }
+        #chat-window {
+            border: 1px solid #ccc;
+            background: #fff;
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            max-width: 70%;
+        }
+        .user {
+            background: #007bff;
+            color: #fff;
+            margin-left: auto;
+            text-align: right;
+        }
+        .system {
+            background: #e9ecef;
+            color: #333;
+        }
+        #input-area {
+            display: flex;
+            gap: 10px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #send-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Inventory Assistant</h1>
+    <div id="chat-window">
+        <div class="message system">Connected. Ask me about the inventory — items, stock levels, prices.</div>
+    </div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Type a message...">
+        <button id="send-btn">Send</button>
+    </div>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        function addMessage(text, type) {
+            const div = document.createElement('div');
+            div.className = 'message ' + type;
+            div.textContent = text;
+            chatWindow.appendChild(div);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        async function send() {
+            const text = userInput.value.trim();
+            if (!text) return;
+            addMessage(text, 'user');
+            userInput.value = '';
+            sendBtn.disabled = true;
+            const thinking = document.createElement('div');
+            thinking.className = 'message system';
+            thinking.textContent = 'Thinking…';
+            chatWindow.appendChild(thinking);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            try {
+                const res = await fetch('http://localhost:5001/api/ask', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: text})
+                });
+                const data = await res.json();
+                thinking.textContent = data.answer || data.error || '(no response)';
+            } catch (e) {
+                thinking.textContent = 'Error: could not reach middleware.';
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        sendBtn.addEventListener('click', send);
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') send();
+        });
+    </script>
+</body>
+</html>
