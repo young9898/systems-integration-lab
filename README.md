@@ -49,8 +49,8 @@ Verified working configuration: Colima 6 CPU / 12 GB / 60 GB on an Apple Silicon
 
 ## Getting Started
 ```bash
-git clone <repo-url>
-cd Systems_Integration_Course
+git clone https://github.com/young9898/systems-integration-lab.git
+cd systems-integration-lab
 cp .env.example .env          # then edit .env and set DB_PASSWORD
 docker compose up --build -d
 docker compose exec middleware ollama pull llama3.2:3b   # one-time, ~2 GB
