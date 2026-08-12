@@ -15,7 +15,9 @@ services:
       DB_PORT: 5432
       DB_NAME: inventory
       DB_USER: app
-      DB_PASSWORD: app_dev_password
+      # Supplied by .env (see .env.example). The ":?" makes Compose refuse to
+      # start with a clear error rather than silently booting a default password.
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env — copy .env.example to .env}
       OLLAMA_MODEL: llama3.2:3b
     volumes:
       - ollama_data:/root/.ollama
@@ -28,7 +30,9 @@ services:
     environment:
       POSTGRES_DB: inventory
       POSTGRES_USER: app
-      POSTGRES_PASSWORD: app_dev_password
+      # Must match DB_PASSWORD above — both read the same .env variable, so they
+      # cannot drift apart and leave the middleware unable to authenticate.
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env — copy .env.example to .env}
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro

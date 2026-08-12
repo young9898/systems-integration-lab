@@ -14,9 +14,16 @@ This repository contains the lab environment for a graduate-level Systems Integr
 ```bash
 git clone <repo-url>
 cd Systems_Integration_Course
+cp .env.example .env          # then edit .env and set DB_PASSWORD
 docker compose up --build -d
 ```
 Open `http://localhost:8080` in your browser to see the frontend.
+
+The database password lives in `.env`, which is gitignored — no credential is
+committed to this repository. Compose refuses to start with a clear error if
+`DB_PASSWORD` is unset, rather than quietly falling back to a default. Any value
+works for local lab use since the database is not reachable outside the compose
+network; `openssl rand -base64 24` will generate one.
 
 ## Architecture
 ```
